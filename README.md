@@ -508,13 +508,10 @@ GitHub:
 
 https://github.com/Amanmulla7171
 
-LinkedIn:
-
-<YOUR_LINKEDIN>
 
 Email:
 
-<YOUR_EMAIL>
+amanmulla4020@gamil.com
 
 ---
 
