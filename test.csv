@@ -1,0 +1,4 @@
+name,email,phone,company
+Alice Smith,alice@example.com,555-0100,Acme Corp
+Bob Johnson,bob@example.com,555-0200,Beta Inc
+Charlie Brown,charlie-invalid-email,555-0300,Gamma LLC
