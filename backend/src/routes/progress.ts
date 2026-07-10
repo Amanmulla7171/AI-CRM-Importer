@@ -39,6 +39,7 @@ progressRouter.get("/:id", validateParams(idParamSchema), async (req: Request, r
     aiFailed: session.aiFailed,
     processingTime: session.processingTime,
     batchCount: session.batchCount,
+    batchMessage: session.batchMessage,
     error: session.error,
   });
 });
@@ -83,6 +84,7 @@ progressRouter.get("/:id/stream", validateParams(idParamSchema), async (req: Req
         aiFailed: session.aiFailed,
         processingTime: session.processingTime,
         batchCount: session.batchCount,
+        batchMessage: session.batchMessage,
         error: session.error,
       })}\n\n`
     );

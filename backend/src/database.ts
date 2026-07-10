@@ -51,6 +51,7 @@ class DBManager {
           aiFailed INTEGER DEFAULT 0,
           processingTime INTEGER DEFAULT 0,
           batchCount INTEGER DEFAULT 0,
+          batchMessage TEXT,
           status TEXT NOT NULL,
           error TEXT,
           mappings TEXT
@@ -58,10 +59,16 @@ class DBManager {
       `);
 
       // Dynamic alter-table migrations for backward compatibility
-      const columnsToMigrate = ["aiProcessed", "aiFailed", "processingTime", "batchCount"];
+      const columnsToMigrate = [
+        { name: "aiProcessed", type: "INTEGER DEFAULT 0" },
+        { name: "aiFailed", type: "INTEGER DEFAULT 0" },
+        { name: "processingTime", type: "INTEGER DEFAULT 0" },
+        { name: "batchCount", type: "INTEGER DEFAULT 0" },
+        { name: "batchMessage", type: "TEXT" }
+      ];
       for (const col of columnsToMigrate) {
         try {
-          this.db.run(`ALTER TABLE sessions ADD COLUMN ${col} INTEGER DEFAULT 0;`);
+          this.db.run(`ALTER TABLE sessions ADD COLUMN ${col.name} ${col.type};`);
         } catch (err) {
           // Column already exists, safe to ignore
         }

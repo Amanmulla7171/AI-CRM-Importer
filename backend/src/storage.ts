@@ -20,6 +20,7 @@ export interface ImportSession {
   aiFailed: number;
   processingTime: number;
   batchCount: number;
+  batchMessage?: string | null;
   status: "pending" | "processing" | "completed" | "failed";
   error?: string;
   records: any[];
@@ -41,8 +42,8 @@ class Storage {
     const createdAt = new Date().toISOString();
     
     await dbManager.run(
-      `INSERT INTO sessions (id, createdAt, rowCount, processedCount, importedCount, failedCount, skippedCount, aiProcessed, aiFailed, processingTime, batchCount, status, error, mappings)
-       VALUES (?, ?, ?, 0, 0, 0, 0, 0, 0, 0, 0, 'pending', NULL, '{}')`,
+      `INSERT INTO sessions (id, createdAt, rowCount, processedCount, importedCount, failedCount, skippedCount, aiProcessed, aiFailed, processingTime, batchCount, batchMessage, status, error, mappings)
+       VALUES (?, ?, ?, 0, 0, 0, 0, 0, 0, 0, 0, NULL, 'pending', NULL, '{}')`,
       [id, createdAt, rowCount]
     );
     
@@ -69,6 +70,7 @@ class Storage {
         aiFailed: sessionRow.aiFailed || 0,
         processingTime: sessionRow.processingTime || 0,
         batchCount: sessionRow.batchCount || 0,
+        batchMessage: sessionRow.batchMessage || null,
         status: sessionRow.status,
         error: sessionRow.error || undefined,
         mappings,
@@ -128,6 +130,10 @@ class Storage {
       if (updates.batchCount !== undefined) {
         fieldsToUpdate.push("batchCount = ?");
         params.push(updates.batchCount);
+      }
+      if (updates.batchMessage !== undefined) {
+        fieldsToUpdate.push("batchMessage = ?");
+        params.push(updates.batchMessage);
       }
       if (updates.error !== undefined) {
         fieldsToUpdate.push("error = ?");

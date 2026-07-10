@@ -365,8 +365,14 @@ async function processImport(sessionId: string): Promise<void> {
       company: companyKey ? row[companyKey] : null,
     }));
 
-    // Task 2: Slice prepared inputs into batches of 20
-    const batches = batchService.chunkRecords(preparedInputs, 20);
+    // Task 2: Slice prepared inputs into batches dynamically based on row count
+    let batchSize = 20;
+    if (preparedInputs.length > 300) {
+      batchSize = 100;
+    } else if (preparedInputs.length > 80) {
+      batchSize = 50;
+    }
+    const batches = batchService.chunkRecords(preparedInputs, batchSize);
 
     for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
       // Check cancellation state
@@ -451,6 +457,7 @@ async function processImport(sessionId: string): Promise<void> {
       totalProcessingTime += Date.now() - batchStartTime;
 
       // Update statistics and process count increments on the DB
+      const batchMsg = `Processing Batch ${batchIndex + 1} / ${batches.length}... Mapping CRM Fields...`;
       await storage.updateSession(sessionId, {
         processedCount: finalRecordsList.length,
         importedCount,
@@ -460,6 +467,7 @@ async function processImport(sessionId: string): Promise<void> {
         aiFailed,
         processingTime: totalProcessingTime,
         batchCount: batches.length,
+        batchMessage: batchMsg,
         records: [...finalRecordsList],
       });
 
@@ -477,6 +485,7 @@ async function processImport(sessionId: string): Promise<void> {
       aiFailed,
       processingTime: totalProcessingTime,
       batchCount: batches.length,
+      batchMessage: "Import complete!",
       records: finalRecordsList,
     });
 
@@ -523,8 +532,14 @@ async function processRetry(
   let aiFailed = session.aiFailed;
   let totalProcessingTime = session.processingTime;
 
-  // Task 2: Chunk retry records into batches of 20
-  const batches = batchService.chunkRecords(failedRecords, 20);
+  // Task 2: Chunk retry records into batches dynamically based on row count
+  let batchSize = 20;
+  if (failedRecords.length > 300) {
+    batchSize = 100;
+  } else if (failedRecords.length > 80) {
+    batchSize = 50;
+  }
+  const batches = batchService.chunkRecords(failedRecords, batchSize);
 
   try {
     for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
@@ -610,6 +625,7 @@ async function processRetry(
 
       const processedCount = alreadyImported + alreadySkipped + recordsMap.size - failedRecords.length;
 
+      const batchMsg = `Retrying Batch ${batchIndex + 1} / ${batches.length}... Mapping CRM Fields...`;
       await storage.updateSession(sessionId, {
         processedCount: alreadyImported + alreadySkipped + recordsMap.size,
         importedCount,
@@ -618,6 +634,7 @@ async function processRetry(
         aiProcessed,
         aiFailed,
         processingTime: totalProcessingTime,
+        batchMessage: batchMsg,
         records: Array.from(recordsMap.values()),
       });
 
@@ -632,6 +649,7 @@ async function processRetry(
       aiProcessed,
       aiFailed,
       processingTime: totalProcessingTime,
+      batchMessage: "Retry complete!",
       records: Array.from(recordsMap.values()),
     });
 

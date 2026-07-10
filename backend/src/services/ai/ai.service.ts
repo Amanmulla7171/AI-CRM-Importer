@@ -27,6 +27,7 @@ export class AIService {
           contents: prompt,
           config: {
             responseMimeType: "application/json",
+            temperature: 0.1,
           },
         });
 

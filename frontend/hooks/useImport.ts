@@ -47,14 +47,7 @@ export const useImport = () => {
 
         setProgress(data.progress);
 
-        if (data.status === "processing" && data.batchCount > 0) {
-          const currentBatchIdx = Math.min(data.batchCount, Math.floor(data.processed / 20) + 1);
-          setBatchMessage(`Processing Batch ${currentBatchIdx} / ${data.batchCount}... Mapping CRM Fields...`);
-        } else if (data.status === "completed") {
-          setBatchMessage("Import complete!");
-        } else {
-          setBatchMessage(null);
-        }
+        setBatchMessage(data.batchMessage || null);
 
         if (data.status === "completed") {
           closeStream();
