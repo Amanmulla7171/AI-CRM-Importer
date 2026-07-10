@@ -33,7 +33,7 @@ validateRouter.post("/", upload.single("file"), async (req: Request, res: Respon
 
   try {
     const csvContent = fs.readFileSync(file.path, "utf8");
-    
+
     // Parse CSV content using papaparse
     const parsed = Papa.parse(csvContent, {
       header: true,
@@ -50,7 +50,7 @@ validateRouter.post("/", upload.single("file"), async (req: Request, res: Respon
     }
 
     const rawHeaders = parsed.meta.fields || [];
-    const headers = rawHeaders.map((h) => h.trim().toLowerCase());
+    const headers = rawHeaders.map((h: string) => h.trim().toLowerCase());
     const rawRows = parsed.data as any[];
 
     if (headers.length === 0) {
@@ -115,7 +115,7 @@ validateRouter.post("/", upload.single("file"), async (req: Request, res: Respon
 
     // Create session in "pending" status
     const sessionId = await storage.createSession(rows.length);
-    
+
     // Save mapping settings in database session
     await storage.updateSession(sessionId, { mappings: mappings as unknown as Record<string, string | null> });
 
