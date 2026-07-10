@@ -4,12 +4,14 @@ interface ProcessingSectionProps {
   progress: number;
   isImporting: boolean;
   onCancel?: () => void;
+  batchMessage?: string | null;
 }
 
 export const ProcessingSection: React.FC<ProcessingSectionProps> = ({
   progress,
   isImporting,
   onCancel,
+  batchMessage,
 }) => {
   if (isImporting === false) return null;
 
@@ -63,7 +65,7 @@ export const ProcessingSection: React.FC<ProcessingSectionProps> = ({
             </div>
             <div>
               <p className="font-semibold text-zinc-900 dark:text-zinc-50">
-                Processing data...
+                {batchMessage || "Processing data..."}
               </p>
               <p className="text-sm text-zinc-600 dark:text-zinc-400">
                 This may take a few moments.

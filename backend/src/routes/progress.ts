@@ -35,6 +35,10 @@ progressRouter.get("/:id", validateParams(idParamSchema), async (req: Request, r
     imported: session.importedCount,
     failed: session.failedCount,
     skipped: session.skippedCount,
+    aiProcessed: session.aiProcessed,
+    aiFailed: session.aiFailed,
+    processingTime: session.processingTime,
+    batchCount: session.batchCount,
     error: session.error,
   });
 });
@@ -75,6 +79,10 @@ progressRouter.get("/:id/stream", validateParams(idParamSchema), async (req: Req
         imported: session.importedCount,
         failed: session.failedCount,
         skipped: session.skippedCount,
+        aiProcessed: session.aiProcessed,
+        aiFailed: session.aiFailed,
+        processingTime: session.processingTime,
+        batchCount: session.batchCount,
         error: session.error,
       })}\n\n`
     );

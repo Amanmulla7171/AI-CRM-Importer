@@ -38,6 +38,7 @@ export default function Home() {
     isImporting,
     error: importError,
     sessionId: importSessionId,
+    batchMessage,
     startImport,
     cancelImport,
     retryImport,
@@ -210,7 +211,7 @@ export default function Home() {
       {renderedAppState === "IMPORTING" && csvData && (
         <>
           <PreviewSection csvData={csvData} mappings={mappings} onMappingChange={handleMappingChange} />
-          <ProcessingSection progress={progress} isImporting={isImporting} onCancel={cancelImport} />
+          <ProcessingSection progress={progress} isImporting={isImporting} onCancel={cancelImport} batchMessage={batchMessage} />
         </>
       )}
 

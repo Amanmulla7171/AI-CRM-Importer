@@ -47,11 +47,25 @@ class DBManager {
           importedCount INTEGER NOT NULL,
           failedCount INTEGER NOT NULL,
           skippedCount INTEGER NOT NULL,
+          aiProcessed INTEGER DEFAULT 0,
+          aiFailed INTEGER DEFAULT 0,
+          processingTime INTEGER DEFAULT 0,
+          batchCount INTEGER DEFAULT 0,
           status TEXT NOT NULL,
           error TEXT,
           mappings TEXT
         );
       `);
+
+      // Dynamic alter-table migrations for backward compatibility
+      const columnsToMigrate = ["aiProcessed", "aiFailed", "processingTime", "batchCount"];
+      for (const col of columnsToMigrate) {
+        try {
+          this.db.run(`ALTER TABLE sessions ADD COLUMN ${col} INTEGER DEFAULT 0;`);
+        } catch (err) {
+          // Column already exists, safe to ignore
+        }
+      }
 
       this.db.run(`
         CREATE TABLE IF NOT EXISTS records (

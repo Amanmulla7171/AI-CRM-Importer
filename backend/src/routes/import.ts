@@ -5,6 +5,10 @@ import fs from "fs";
 import path from "path";
 import Papa from "papaparse";
 import { dbManager } from "../database";
+import { batchService } from "../services/batch/batch.service";
+import { aiService } from "../services/ai/ai.service";
+import { crmTransformer } from "../transformers/crm.transformer";
+import { crmValidator } from "../validators/crm.validator";
 
 export const importRouter = Router();
 const emailPattern = new RegExp("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$");
@@ -301,7 +305,7 @@ importRouter.post("/:id/retry", validateParams(idParamSchema), async (req: Reque
 });
 
 /**
- * Process import in batches from stored CSV file
+ * Process import in batches from stored CSV file using the sequential pipeline
  */
 async function processImport(sessionId: string): Promise<void> {
   const session = await storage.getSession(sessionId);
@@ -319,11 +323,14 @@ async function processImport(sessionId: string): Promise<void> {
 
   await storage.updateSession(sessionId, { status: "processing" });
 
-  const batchSize = 100;
   let importedCount = 0;
   let failedCount = 0;
   let skippedCount = 0;
-  const records: any[] = [];
+  let aiProcessed = 0;
+  let aiFailed = 0;
+  let totalProcessingTime = 0;
+  
+  const finalRecordsList: any[] = [];
 
   try {
     const csvContent = fs.readFileSync(csvPath, "utf8");
@@ -334,7 +341,7 @@ async function processImport(sessionId: string): Promise<void> {
 
     const rawRows = parsed.data as any[];
     
-    // Normalize keys of all rows to lowercase
+    // Normalize keys of all rows to lowercase for robust header matching
     const rows = rawRows.map((row) => {
       const normalized: any = {};
       for (const key of Object.keys(row)) {
@@ -344,88 +351,142 @@ async function processImport(sessionId: string): Promise<void> {
     });
 
     const mappings = session.mappings || { name: "name", email: "email", phone: "phone", company: "company" };
-    const nameKey = mappings.name || "name";
-    const emailKey = mappings.email || "email";
-    const phoneKey = mappings.phone;
-    const companyKey = mappings.company;
+    const nameKey = (mappings.name || "name").toLowerCase();
+    const emailKey = (mappings.email || "email").toLowerCase();
+    const phoneKey = mappings.phone ? mappings.phone.toLowerCase() : null;
+    const companyKey = mappings.company ? mappings.company.toLowerCase() : null;
 
-    for (let i = 0; i < rows.length; i++) {
-      // Check if import was cancelled before processing next batch item
-      if (i % batchSize === 0) {
-        const currentSession = await storage.getSession(sessionId);
-        if (currentSession?.status === "failed" && currentSession.error === "Import cancelled by user") {
-          console.log(`[Import] ${sessionId}: Halting loop. Cancelled by user.`);
-          return;
+    // Map each raw CSV row to standard CRM input properties
+    const preparedInputs = rows.map((row, idx) => ({
+      id: `${sessionId}_${idx}`,
+      name: row[nameKey] || null,
+      email: row[emailKey] || null,
+      phone: phoneKey ? row[phoneKey] : null,
+      company: companyKey ? row[companyKey] : null,
+    }));
+
+    // Task 2: Slice prepared inputs into batches of 20
+    const batches = batchService.chunkRecords(preparedInputs, 20);
+
+    for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
+      // Check cancellation state
+      const currentSession = await storage.getSession(sessionId);
+      if (currentSession?.status === "failed" && currentSession.error === "Import cancelled by user") {
+        console.log(`[Import] ${sessionId}: Halting loop. Cancelled by user.`);
+        return;
+      }
+
+      const batchRows = batches[batchIndex];
+      const batchStartTime = Date.now();
+      let success = false;
+      let attempts = 0;
+      const maxAttempts = 3;
+      let lastErrorMsg = "";
+      let cleanedBatch: any[] = [];
+
+      // Task 7: Batch Retry logic with max 3 attempts
+      while (attempts < maxAttempts && !success) {
+        attempts++;
+        try {
+          // Task 1: Clean records in AI service
+          cleanedBatch = await aiService.cleanRecordsBatch(batchRows);
+          success = true;
+        } catch (err: any) {
+          lastErrorMsg = err.message || "Gemini API Timeout";
+          console.warn(`[Import] ${sessionId}: Batch ${batchIndex + 1}/${batches.length} attempt ${attempts} failed: ${lastErrorMsg}`);
+          if (attempts < maxAttempts) {
+            await delay(500 * attempts); // Exponential delay
+          }
         }
       }
 
-      const row = rows[i];
-      let status: "imported" | "failed" | "skipped" = "imported";
-      let error: string | undefined;
+      if (!success) {
+        // Task 6: Custom error responses
+        const errorDetails = {
+          success: false,
+          message: lastErrorMsg,
+          batch: batchIndex + 1,
+        };
 
-      const nameVal = row[nameKey];
-      const emailVal = row[emailKey];
-      const phoneVal = phoneKey ? row[phoneKey] : undefined;
-      const companyVal = companyKey ? row[companyKey] : undefined;
+        aiFailed += batchRows.length;
 
-      if (nameVal == null || String(nameVal).trim() === "") {
-        status = "failed";
-        error = "Missing name";
-        failedCount++;
-      } else if (emailVal == null || String(emailVal).trim() === "") {
-        status = "failed";
-        error = "Missing email";
-        failedCount++;
-      } else if (emailPattern.test(String(emailVal).trim()) === false) {
-        status = "failed";
-        error = "Invalid email format";
-        failedCount++;
-      } else {
-        importedCount++;
-      }
-
-      if (i % batchSize === 0) {
-        await delay(100);
-      }
-
-      records.push({
-        id: sessionId + "_" + i,
-        name: nameVal ? String(nameVal).trim() : "",
-        email: emailVal ? String(emailVal).trim() : "",
-        phone: phoneVal ? String(phoneVal).trim() : undefined,
-        company: companyVal ? String(companyVal).trim() : undefined,
-        status,
-        error,
-      });
-
-      const processedCount = i + 1;
-
-      if (i % batchSize === 0 || i === rows.length - 1) {
         await storage.updateSession(sessionId, {
-          processedCount,
-          importedCount,
-          failedCount,
-          skippedCount,
-          records: [...records]
+          status: "failed",
+          error: JSON.stringify(errorDetails),
+          aiFailed,
+          batchCount: batches.length,
+        });
+
+        console.error(`[Import] ${sessionId}: Halting import. Batch ${batchIndex + 1} failed completely.`);
+        return;
+      }
+
+      // Tasks 3 & 4: CRM Transformation & Validation
+      const transformedBatch = crmTransformer.transformRecords(cleanedBatch);
+
+      for (let j = 0; j < transformedBatch.length; j++) {
+        const item = transformedBatch[j];
+        const validation = crmValidator.validateRecord(item);
+
+        if (validation.status === "imported") {
+          importedCount++;
+        } else if (validation.status === "failed") {
+          failedCount++;
+        } else {
+          skippedCount++;
+        }
+
+        finalRecordsList.push({
+          id: batchRows[j].id,
+          name: item.name,
+          email: item.email,
+          phone: item.phone || undefined,
+          company: item.company || undefined,
+          status: validation.status,
+          error: validation.error,
         });
       }
+
+      aiProcessed += batchRows.length;
+      totalProcessingTime += Date.now() - batchStartTime;
+
+      // Update statistics and process count increments on the DB
+      await storage.updateSession(sessionId, {
+        processedCount: finalRecordsList.length,
+        importedCount,
+        failedCount,
+        skippedCount,
+        aiProcessed,
+        aiFailed,
+        processingTime: totalProcessingTime,
+        batchCount: batches.length,
+        records: [...finalRecordsList],
+      });
+
+      // Brief throttle loop pause
+      await delay(100);
     }
 
+    // Complete session
     await storage.updateSession(sessionId, {
       status: "completed",
       importedCount,
       failedCount,
       skippedCount,
-      records
+      aiProcessed,
+      aiFailed,
+      processingTime: totalProcessingTime,
+      batchCount: batches.length,
+      records: finalRecordsList,
     });
 
     console.log(
-      `[Import] ${sessionId}: Completed - ${importedCount} imported, ${failedCount} failed, ${skippedCount} skipped`
+      `[Import] ${sessionId}: Completed pipeline - ${importedCount} imported, ${failedCount} failed, ${skippedCount} skipped`
     );
   } catch (error) {
     await storage.updateSession(sessionId, {
       status: "failed",
-      error: error instanceof Error ? error.message : "Unknown error",
+      error: error instanceof Error ? error.message : "Unknown import pipeline error",
     });
     console.error(`[Import] ${sessionId}: Failed -`, error);
   } finally {
@@ -441,7 +502,7 @@ async function processImport(sessionId: string): Promise<void> {
 }
 
 /**
- * Retry importing the filtered failed records in the background
+ * Retry importing the filtered failed records in the background using the pipeline
  */
 async function processRetry(
   sessionId: string,
@@ -449,74 +510,118 @@ async function processRetry(
   alreadyImported: number,
   alreadySkipped: number
 ): Promise<void> {
-  const batchSize = 100;
-  let importedCount = alreadyImported;
-  let failedCount = 0;
-  let skippedCount = alreadySkipped;
-
-  // Load the current session records to merge updates
+  // Load current session
   const session = await storage.getSession(sessionId);
   if (session == null) return;
 
   const recordsMap = new Map(session.records.map((r) => [r.id, r]));
+  
+  let importedCount = alreadyImported;
+  let failedCount = 0;
+  let skippedCount = alreadySkipped;
+  let aiProcessed = session.aiProcessed;
+  let aiFailed = session.aiFailed;
+  let totalProcessingTime = session.processingTime;
+
+  // Task 2: Chunk retry records into batches of 20
+  const batches = batchService.chunkRecords(failedRecords, 20);
 
   try {
-    for (let i = 0; i < failedRecords.length; i++) {
-      // Check if import was cancelled before next batch item
-      if (i % batchSize === 0) {
-        const currentSession = await storage.getSession(sessionId);
-        if (currentSession?.status === "failed" && currentSession.error === "Import cancelled by user") {
-          console.log(`[Import Retry] ${sessionId}: Halting retry loop. Cancelled by user.`);
-          return;
+    for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
+      // Check cancellation state
+      const currentSession = await storage.getSession(sessionId);
+      if (currentSession?.status === "failed" && currentSession.error === "Import cancelled by user") {
+        console.log(`[Import Retry] ${sessionId}: Halting retry loop. Cancelled by user.`);
+        return;
+      }
+
+      const batchRows = batches[batchIndex];
+      const batchStartTime = Date.now();
+      let success = false;
+      let attempts = 0;
+      const maxAttempts = 3;
+      let lastErrorMsg = "";
+      let cleanedBatch: any[] = [];
+
+      // Task 7: Batch Retry logic with max 3 attempts
+      while (attempts < maxAttempts && !success) {
+        attempts++;
+        try {
+          cleanedBatch = await aiService.cleanRecordsBatch(batchRows);
+          success = true;
+        } catch (err: any) {
+          lastErrorMsg = err.message || "Gemini API Timeout";
+          console.warn(`[Import Retry] ${sessionId}: Batch ${batchIndex + 1}/${batches.length} attempt ${attempts} failed: ${lastErrorMsg}`);
+          if (attempts < maxAttempts) {
+            await delay(500 * attempts);
+          }
         }
       }
 
-      const record = failedRecords[i];
-      let status: "imported" | "failed" | "skipped" = "imported";
-      let error: string | undefined;
+      if (!success) {
+        // Task 6: Custom error responses
+        const errorDetails = {
+          success: false,
+          message: lastErrorMsg,
+          batch: batchIndex + 1,
+        };
 
-      // Re-run validation checks on the record fields
-      const nameVal = record.name;
-      const emailVal = record.email;
+        aiFailed += batchRows.length;
 
-      if (nameVal == null || String(nameVal).trim() === "") {
-        status = "failed";
-        error = "Missing name";
-        failedCount++;
-      } else if (emailVal == null || String(emailVal).trim() === "") {
-        status = "failed";
-        error = "Missing email";
-        failedCount++;
-      } else if (emailPattern.test(String(emailVal).trim()) === false) {
-        status = "failed";
-        error = "Invalid email format";
-        failedCount++;
-      } else {
-        importedCount++;
-      }
-
-      if (i % batchSize === 0) {
-        await delay(100);
-      }
-
-      // Update in recordsMap
-      recordsMap.set(record.id, {
-        ...record,
-        status,
-        error,
-      });
-
-      const processedCount = alreadyImported + alreadySkipped + i + 1;
-
-      if (i % batchSize === 0 || i === failedRecords.length - 1) {
         await storage.updateSession(sessionId, {
-          processedCount,
-          importedCount,
-          failedCount,
-          skippedCount,
-          records: Array.from(recordsMap.values()),
+          status: "failed",
+          error: JSON.stringify(errorDetails),
+          aiFailed,
+        });
+
+        console.error(`[Import Retry] ${sessionId}: Halting retry. Batch ${batchIndex + 1} failed completely.`);
+        return;
+      }
+
+      // Tasks 3 & 4: CRM Transformation & Validation
+      const transformedBatch = crmTransformer.transformRecords(cleanedBatch);
+
+      for (let j = 0; j < transformedBatch.length; j++) {
+        const item = transformedBatch[j];
+        const validation = crmValidator.validateRecord(item);
+
+        if (validation.status === "imported") {
+          importedCount++;
+        } else if (validation.status === "failed") {
+          failedCount++;
+        } else {
+          skippedCount++;
+        }
+
+        // Update in recordsMap
+        recordsMap.set(batchRows[j].id, {
+          id: batchRows[j].id,
+          name: item.name,
+          email: item.email,
+          phone: item.phone || undefined,
+          company: item.company || undefined,
+          status: validation.status,
+          error: validation.error,
         });
       }
+
+      aiProcessed += batchRows.length;
+      totalProcessingTime += Date.now() - batchStartTime;
+
+      const processedCount = alreadyImported + alreadySkipped + recordsMap.size - failedRecords.length;
+
+      await storage.updateSession(sessionId, {
+        processedCount: alreadyImported + alreadySkipped + recordsMap.size,
+        importedCount,
+        failedCount,
+        skippedCount,
+        aiProcessed,
+        aiFailed,
+        processingTime: totalProcessingTime,
+        records: Array.from(recordsMap.values()),
+      });
+
+      await delay(100);
     }
 
     await storage.updateSession(sessionId, {
@@ -524,6 +629,9 @@ async function processRetry(
       importedCount,
       failedCount,
       skippedCount,
+      aiProcessed,
+      aiFailed,
+      processingTime: totalProcessingTime,
       records: Array.from(recordsMap.values()),
     });
 

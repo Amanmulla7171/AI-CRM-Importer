@@ -16,6 +16,10 @@ export interface ImportSession {
   importedCount: number;
   failedCount: number;
   skippedCount: number;
+  aiProcessed: number;
+  aiFailed: number;
+  processingTime: number;
+  batchCount: number;
   status: "pending" | "processing" | "completed" | "failed";
   error?: string;
   records: any[];
@@ -37,8 +41,8 @@ class Storage {
     const createdAt = new Date().toISOString();
     
     await dbManager.run(
-      `INSERT INTO sessions (id, createdAt, rowCount, processedCount, importedCount, failedCount, skippedCount, status, error, mappings)
-       VALUES (?, ?, ?, 0, 0, 0, 0, 'pending', NULL, '{}')`,
+      `INSERT INTO sessions (id, createdAt, rowCount, processedCount, importedCount, failedCount, skippedCount, aiProcessed, aiFailed, processingTime, batchCount, status, error, mappings)
+       VALUES (?, ?, ?, 0, 0, 0, 0, 0, 0, 0, 0, 'pending', NULL, '{}')`,
       [id, createdAt, rowCount]
     );
     
@@ -61,6 +65,10 @@ class Storage {
         importedCount: sessionRow.importedCount,
         failedCount: sessionRow.failedCount,
         skippedCount: sessionRow.skippedCount,
+        aiProcessed: sessionRow.aiProcessed || 0,
+        aiFailed: sessionRow.aiFailed || 0,
+        processingTime: sessionRow.processingTime || 0,
+        batchCount: sessionRow.batchCount || 0,
         status: sessionRow.status,
         error: sessionRow.error || undefined,
         mappings,
@@ -104,6 +112,22 @@ class Storage {
       if (updates.skippedCount !== undefined) {
         fieldsToUpdate.push("skippedCount = ?");
         params.push(updates.skippedCount);
+      }
+      if (updates.aiProcessed !== undefined) {
+        fieldsToUpdate.push("aiProcessed = ?");
+        params.push(updates.aiProcessed);
+      }
+      if (updates.aiFailed !== undefined) {
+        fieldsToUpdate.push("aiFailed = ?");
+        params.push(updates.aiFailed);
+      }
+      if (updates.processingTime !== undefined) {
+        fieldsToUpdate.push("processingTime = ?");
+        params.push(updates.processingTime);
+      }
+      if (updates.batchCount !== undefined) {
+        fieldsToUpdate.push("batchCount = ?");
+        params.push(updates.batchCount);
       }
       if (updates.error !== undefined) {
         fieldsToUpdate.push("error = ?");

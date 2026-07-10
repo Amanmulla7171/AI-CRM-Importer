@@ -11,6 +11,7 @@ export const useImport = () => {
   const [isImporting, setIsImporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
+  const [batchMessage, setBatchMessage] = useState<string | null>(null);
   const eventSourceRef = useRef<EventSource | null>(null);
   const sessionIdRef = useRef<string | null>(null);
 
@@ -45,6 +46,15 @@ export const useImport = () => {
         }
 
         setProgress(data.progress);
+
+        if (data.status === "processing" && data.batchCount > 0) {
+          const currentBatchIdx = Math.min(data.batchCount, Math.floor(data.processed / 20) + 1);
+          setBatchMessage(`Processing Batch ${currentBatchIdx} / ${data.batchCount}... Mapping CRM Fields...`);
+        } else if (data.status === "completed") {
+          setBatchMessage("Import complete!");
+        } else {
+          setBatchMessage(null);
+        }
 
         if (data.status === "completed") {
           closeStream();
@@ -85,6 +95,7 @@ export const useImport = () => {
     setRecords([]);
     setStats(null);
     setSessionId(sessionId);
+    setBatchMessage("Starting import queue...");
 
     try {
       const { sessionId: returnedSessionId } = await api.importCSV(sessionId);
@@ -109,6 +120,7 @@ export const useImport = () => {
     setError(null);
     sessionIdRef.current = null;
     setSessionId(null);
+    setBatchMessage(null);
   };
 
   const cancelImport = async () => {
@@ -147,6 +159,7 @@ export const useImport = () => {
     setProgress(100);
     sessionIdRef.current = sessionId;
     setSessionId(sessionId);
+    setBatchMessage(null);
     try {
       const results = await api.getImportResults(sessionId);
       setRecords(results.records);
@@ -163,6 +176,7 @@ export const useImport = () => {
     isImporting,
     error,
     sessionId,
+    batchMessage,
     startImport,
     cancelImport,
     retryImport,
