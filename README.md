@@ -1,400 +1,521 @@
-# AI CRM Importer
+# 🚀 AI CRM Importer
 
-A modern full-stack application for importing CSV data into a CRM system. Built with Next.js, Express, TypeScript, and real-time progress tracking.
+> **An AI-powered CRM CSV Importer that intelligently maps CSV files from different sources into a standardized CRM format using Google Gemini AI.**
 
-## 🎯 Features
+![Next.js](https://img.shields.io/badge/Next.js-16-black)
+![React](https://img.shields.io/badge/React-19-blue)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)
+![Express](https://img.shields.io/badge/Express-4-green)
+![Gemini AI](https://img.shields.io/badge/Google-Gemini-orange)
+![License](https://img.shields.io/badge/License-MIT-green)
 
-### Frontend (Next.js 16.2.10)
-- ✅ **Drag & Drop Upload** — Easy CSV file selection
-- ✅ **Real-time Validation** — Immediate feedback on file issues
-- ✅ **Interactive Preview** — Sort, filter, and paginate CSV data
-- ✅ **Column Management** — Show/hide columns dynamically
-- ✅ **Real-time Progress** — Live import status updates
-- ✅ **Results Dashboard** — Color-coded import statistics
-- ✅ **Dark Mode** — Full light/dark theme support
-- ✅ **Responsive Design** — Works on desktop, tablet, mobile
+---
 
-### Backend (Express.js)
-- ✅ **CSV Import API** — Async batch processing
-- ✅ **Data Validation** — Email format, required fields
-- ✅ **Progress Tracking** — Real-time status polling
-- ✅ **Session Management** — 24-hour session retention
-- ✅ **CORS Enabled** — Frontend communication ready
-- ✅ **Error Handling** — Structured error responses
+## 🌐 Live Demo
 
-## 📊 Project Status
+**Frontend:**  
+👉 https://ai-crm-importer-beta.vercel.app/
 
-| Task | Status |
-|------|--------|
-| AI Integration (ai.service.ts, crm.prompt.ts) | ✅ Completed |
-| Batch Processing (batch.service.ts) | ✅ Completed |
-| AI Response Transformation (crm.transformer.ts) | ✅ Completed |
-| CRM Validation (crm.validator.ts) | ✅ Completed |
-| Import Route Refactor (dynamic batch sizing, progress messages) | ✅ Completed |
-| Documentation (README, DEPLOYMENT) | ✅ Updated |
-| Testing Suite | ❓ Not started |
-| Deployment Pipeline (Docker/CI) | ❓ Not started |
+**Backend API:**  
+👉 https://ai-crm-importer-u0sx.onrender.com
 
-## 📋 Project Structure
+**GitHub Repository:**  
+👉 https://github.com/Amanmulla7171/AI-CRM-Importer
 
+---
+
+# 📖 Project Overview
+
+Organizations receive customer information from multiple sources such as:
+
+- Facebook Ads
+- Google Ads
+- Excel Sheets
+- CRM Exports
+- Third-party Vendors
+
+Each source has different column names and data formats.
+
+Example:
+
+| Facebook | Google | Excel | CRM |
+|----------|----------|----------|----------|
+| Full Name | Customer Name | Name | name |
+| Email ID | Mail | Email | email |
+| Contact | Mobile | Phone | mobile |
+
+Manually mapping these columns into a CRM system is time-consuming and error-prone.
+
+This project automates the entire workflow using AI.
+
+---
+
+# ✨ Features
+
+## 🎨 Frontend
+
+- ✅ Drag & Drop CSV Upload
+- ✅ CSV Validation
+- ✅ Interactive Data Preview
+- ✅ Sorting
+- ✅ Filtering
+- ✅ Pagination
+- ✅ Column Visibility Toggle
+- ✅ Progress Tracking
+- ✅ Results Dashboard
+- ✅ Responsive Design
+- ✅ Dark Mode Support
+
+---
+
+## ⚙️ Backend
+
+- ✅ REST API
+- ✅ Express + TypeScript
+- ✅ Dynamic Batch Processing
+- ✅ Session Management
+- ✅ Real-time Progress Tracking
+- ✅ Structured Error Handling
+- ✅ CSV Validation
+- ✅ Automatic Session Cleanup
+
+---
+
+## 🤖 AI Features
+
+- ✅ Google Gemini Integration
+- ✅ Intelligent Column Mapping
+- ✅ Dynamic Prompt Engineering
+- ✅ CRM Schema Transformation
+- ✅ CRM Data Validation
+- ✅ Deterministic JSON Output
+- ✅ Optimized Low-Latency Processing
+
+---
+
+# 🏗 System Architecture
+
+```text
+                 Next.js Frontend
+
+                        │
+
+                REST API Communication
+
+                        │
+
+                Express.js Backend
+
+                        │
+
+        ┌─────────────────────────────────┐
+        │                                 │
+        ▼                                 ▼
+
+    CSV Validation                 Session Storage
+
+        │
+
+        ▼
+
+ Dynamic Batch Processing
+
+        │
+
+        ▼
+
+ Google Gemini AI
+
+        │
+
+        ▼
+
+ CRM Data Transformation
+
+        │
+
+        ▼
+
+ CRM Validation
+
+        │
+
+        ▼
+
+ Import Results
 ```
+
+---
+
+# 🔄 Application Workflow
+
+```text
+Upload CSV
+
+      │
+
+      ▼
+
+Validate CSV
+
+      │
+
+      ▼
+
+Preview Data
+
+      │
+
+      ▼
+
+Start Import
+
+      │
+
+      ▼
+
+Dynamic Batch Processing
+
+      │
+
+      ▼
+
+Gemini AI Mapping
+
+      │
+
+      ▼
+
+CRM Transformation
+
+      │
+
+      ▼
+
+Validation
+
+      │
+
+      ▼
+
+Store Results
+
+      │
+
+      ▼
+
+Display Dashboard
+```
+
+---
+
+# 🚀 Performance Optimizations
+
+This project includes several production-oriented optimizations:
+
+- Dynamic Batch Processing
+- Optimized Gemini Prompt
+- Temperature = 0.1
+- Backend-driven Progress Messages
+- Reduced API Calls
+- Asynchronous Processing
+- Session Cleanup
+- Optimized Import Pipeline
+
+---
+
+# 🛠 Tech Stack
+
+## Frontend
+
+- Next.js 16
+- React 19
+- TypeScript
+- Tailwind CSS v4
+- shadcn/ui
+- Axios
+
+---
+
+## Backend
+
+- Express.js
+- TypeScript
+- Google Gemini AI
+- PapaParse
+- Multer
+- SQL.js
+
+---
+
+## Development
+
+- Git
+- GitHub
+- Vercel
+- Render
+
+---
+
+# 📂 Project Structure
+
+```text
 AI-CRM-Importer/
-├── frontend/                    # Next.js Application
-│   ├── app/                    # App Router pages
-│   ├── components/             # React components
-│   │   ├── layout/            # Layout components
-│   │   ├── upload/            # Upload features
-│   │   ├── preview/           # CSV preview table
-│   │   ├── processing/        # Import progress
-│   │   ├── result/            # Results dashboard
-│   │   └── shared/            # Reusable components
-│   ├── hooks/                 # Custom React hooks
-│   ├── services/              # API service layer
-│   ├── types/                 # TypeScript types
-│   ├── utils/                 # Utility functions
-│   ├── SPRINT_*.md            # Sprint documentation
+
+│
+
+├── frontend/
+│
+│   ├── app/
+│   ├── components/
+│   ├── hooks/
+│   ├── services/
+│   ├── types/
+│   ├── utils/
 │   └── package.json
 │
-├── backend/                     # Express.js Application
-│   ├── src/
-│   │   ├── server.ts          # Express app setup
-│   │   ├── storage.ts         # Session storage
-│   │   └── routes/            # API endpoints
-│   │       ├── import.ts      # Import endpoint
-│   │       ├── validate.ts    # Validation endpoint
-│   │       └── progress.ts    # Progress endpoint
-│   ├── main.ts                # Entry point
-│   ├── package.json
-│   ├── tsconfig.json
-│   └── .env.example
+├── backend/
 │
-└── README.md
+│   ├── src/
+│   │
+│   ├── routes/
+│   ├── services/
+│   ├── validators/
+│   ├── transformers/
+│   ├── prompts/
+│   ├── middleware/
+│   ├── storage.ts
+│   ├── database.ts
+│   └── server.ts
+│
+├── README.md
+└── LICENSE
 ```
 
-## 🚀 Quick Start
+---
 
-### Prerequisites
-- Node.js 18+ and npm
-- Modern web browser
+# 📡 REST API
 
-### Installation & Running
+## Health Check
 
-#### 1. Install Backend Dependencies
-```bash
-cd backend
-npm install
+```http
+GET /health
 ```
 
-#### 2. Install Frontend Dependencies
-```bash
-cd frontend
-npm install
-```
+---
 
-#### 3. Start Backend Server (Terminal 1)
-```bash
-cd backend
-npm run dev
-```
-Expected output:
-```
-✓ Server running on http://localhost:3001
-✓ CORS enabled for frontend
-✓ Health check: GET http://localhost:3001/health
-```
+## Validate CSV
 
-#### 4. Start Frontend Application (Terminal 2)
-```bash
-cd frontend
-npm run dev
-```
-Expected output:
-```
-▲ Next.js 16.2.10
-- Local: http://localhost:3000
-- Environments: .env.local
-```
-
-#### 5. Open Application
-Navigate to: **http://localhost:3000**
-
-## 📖 How to Use
-
-### 1. **Upload CSV File**
-- Click the upload area or drag & drop a CSV file
-- File must be < 10MB
-- Required columns: `name`, `email`
-
-### 2. **Review Validation**
-- System shows 5-point validation checklist
-- Green ✓ if valid, Red ✗ if issues
-- Specific error messages for each problem
-
-### 3. **Preview Data (Optional)**
-- Sort by any column (click header)
-- Filter by keyword (type in filter box)
-- Toggle columns on/off (show/hide)
-- Navigate pages (10 rows per page)
-
-### 4. **Start Import**
-- Click "Start Import" button
-- Progress bar shows real-time status
-- Can't cancel once started
-
-### 5. **View Results**
-- See statistics: Imported, Failed, Skipped
-- Scroll through imported records
-- Each record shows status and any errors
-
-## 🔌 API Endpoints
-
-### Health Check
-```
-GET http://localhost:3001/health
-```
-
-### Validate CSV
-```
+```http
 POST /api/validate
-Content-Type: application/json
-
-{
-  "rows": [{"name": "John", "email": "john@example.com"}],
-  "headers": ["name", "email"]
-}
 ```
 
-### Submit Import
-```
+---
+
+## Start Import
+
+```http
 POST /api/import
-Content-Type: application/json
-
-{
-  "rows": [...],
-  "headers": [...]
-}
-
-Response: { "success": true, "sessionId": "import_..." }
 ```
 
-### Check Progress
-```
+---
+
+## Import Progress
+
+```http
 GET /api/progress/:sessionId
 ```
 
-### Get Results
-```
+---
+
+## Import Result
+
+```http
 GET /api/import/:sessionId
 ```
 
-## 📊 CSV Format Requirements
+---
 
-### Valid CSV File
-```csv
-name,email,phone,company
-John Doe,john@example.com,555-1234,ACME Corp
-Jane Smith,jane@example.com,555-5678,Tech Inc
-```
+# ⚡ Local Setup
 
-### Requirements
-- ✅ Headers: `name`, `email` (required)
-- ✅ Additional columns allowed
-- ✅ No empty required fields
-- ✅ Valid email format
-- ✅ File size < 10MB
-- ✅ UTF-8 encoding
+## Clone Repository
 
-### Will Fail
-- ❌ Missing `name` or `email` column
-- ❌ Rows with empty name/email
-- ❌ Invalid email format
-- ❌ File > 10MB
-- ❌ Non-CSV format
-
-## 🧪 Testing
-
-### Test with Sample CSV
-
-1. Create a file `test.csv`:
-```csv
-name,email,phone
-John Doe,john@example.com,555-1234
-Jane Smith,jane@example.com,555-5678
-Bob Johnson,invalid-email,555-9999
-```
-
-2. Upload via UI
-3. View validation results
-4. Start import
-5. Check results
-
-## 🛠️ Development
-
-### Frontend Development
 ```bash
-cd frontend
-npm run dev       # Start dev server
-npm run build     # Build for production
-npm run lint      # Run ESLint
+git clone https://github.com/Amanmulla7171/AI-CRM-Importer.git
+
+cd AI-CRM-Importer
 ```
 
-### Backend Development
+---
+
+## Backend
+
 ```bash
 cd backend
-npm run dev       # Start with ts-node
-npm run build     # Compile TypeScript
-npm run start     # Run compiled version
-npm run type-check # Check types
+
+npm install
+
+npm run dev
 ```
 
-## 📝 Sprint Documentation
+Runs at
 
-- **Sprint 1**: Project scaffold, types, services, state machine
-- **Sprint 2**: UI polish, animations, component library
-- **Sprint 3**: File validation, error messages, file info display
-- **Sprint 4**: CSV preview with sorting, filtering, pagination
-- **Sprint 5**: Real backend API integration, progress tracking
+```
+http://localhost:3001
+```
 
-Each sprint has comprehensive documentation in:
-- `frontend/SPRINT_1.md`
-- `frontend/SPRINT_2.md`
-- `frontend/SPRINT_3.md`
-- `frontend/SPRINT_4.md`
-- `frontend/SPRINT_5.md`
+---
 
-## 🎨 Tech Stack
+## Frontend
 
-### Frontend
-- **Framework**: Next.js 16.2.10 with App Router
-- **Language**: TypeScript (strict mode)
-- **Styling**: Tailwind CSS 4 with dark mode
-- **HTTP**: Axios 1.18.1
-- **Components**: React 19.2.4 with custom hooks
-- **UI Elements**: Base UI, shadcn components
-
-### Backend
-- **Framework**: Express.js 4.18
-- **Language**: TypeScript (strict mode)
-- **CORS**: Enabled for all origins (development)
-- **Port**: 3001 (configurable via PORT env var)
-- **Storage**: In-memory (24-hour session retention)
-
-### Development
-- **Build**: Next.js CLI, TypeScript tsc
-- **Dev Server**: ts-node (backend), next dev (frontend)
-- **Type Checking**: TypeScript strict mode (100%)
-
-## 📦 Build for Production
-
-### Frontend
 ```bash
 cd frontend
-npm run build
-npm run start
-# Runs on http://localhost:3000
+
+npm install
+
+npm run dev
 ```
 
-### Backend
-```bash
-cd backend
-npm run build
-npm run start
-# Runs on http://localhost:3001
+Runs at
+
+```
+http://localhost:3000
 ```
 
-## 🚢 Deployment
+---
 
-### Vercel (Frontend)
-```bash
-# Push to GitHub
-git push origin main
-# Connect to Vercel dashboard
-# Set environment variable: NEXT_PUBLIC_API_URL=https://api.yourdomain.com
+# 🌍 Environment Variables
+
+## Frontend
+
+Create:
+
+```
+frontend/.env.local
 ```
 
-### Backend Deployment Options
-- Vercel Functions
-- Heroku
-- AWS Lambda + API Gateway
-- Docker containers
-- Self-hosted Node.js
-
-## ⚙️ Environment Variables
-
-### Frontend (.env.local)
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:3001
 ```
 
-### Backend (.env)
+---
+
+## Backend
+
+Create:
+
+```
+backend/.env
+```
+
 ```env
 PORT=3001
-NODE_ENV=development
+
+GEMINI_API_KEY=YOUR_GEMINI_API_KEY
 ```
-
-## 📊 Performance
-
-- **CSV Preview**: Loads 10 rows at a time (paginated)
-- **Sorting**: O(n log n) client-side
-- **Filtering**: O(n) client-side search
-- **Import**: 100 rows per batch, async processing
-- **Storage**: Auto-cleanup of sessions > 24h old
-
-## 🔒 Security Notes
-
-### Production Recommendations
-1. Add authentication middleware
-2. Enable HTTPS/TLS
-3. Add rate limiting
-4. Validate all inputs server-side
-5. Use CSRF protection
-6. Set CORS for specific origins
-7. Add request signing
-8. Use database instead of in-memory storage
-9. Add error tracking (Sentry)
-10. Enable security headers
-
-## 🐛 Troubleshooting
-
-### Backend won't start
-```bash
-# Check port is free
-lsof -i :3001
-
-# Check dependencies installed
-cd backend && npm install
-
-# Check TypeScript config
-npm run type-check
-```
-
-### Frontend can't connect to backend
-```
-NEXT_PUBLIC_API_URL must point to backend
-Check backend is running on :3001
-Check CORS is enabled
-Check firewall/network issues
-```
-
-### Import fails
-```
-Check CSV has required columns (name, email)
-Validate email format
-Check file size < 10MB
-See backend console for detailed error logs
-```
-
-## 📞 Support
-
-- Check sprint documentation for features
-- Review console for error messages
-- Verify backend health: `curl http://localhost:3001/health`
-- Check network tab in DevTools
-
-## 📄 License
-
-MIT
 
 ---
 
-**Last Updated**: Sprint 5 Complete - Real Backend API Integration
+# 📊 CSV Requirements
+
+Supported:
+
+- UTF-8 CSV
+- Required Columns:
+  - name
+  - email
+
+Additional columns are automatically mapped using AI.
+
+Example:
+
+```csv
+name,email,phone,company
+John Doe,john@example.com,9876543210,ABC Ltd
+Jane Smith,jane@example.com,9988776655,XYZ Pvt Ltd
+```
+
+---
+
+
+
+# 🚀 Deployment
+
+## Frontend
+
+Platform:
+
+- Vercel
+
+---
+
+## Backend
+
+Platform:
+
+- Render
+
+---
+
+# 📈 Future Improvements
+
+- PostgreSQL Database
+- Redis Queue
+- WebSocket Progress Updates
+- Authentication
+- Docker Support
+- Export Results
+- AI Confidence Score
+- Multi-User Support
+- Import History
+- Audit Logs
+
+---
+
+# 🧪 Testing
+
+Manual testing includes:
+
+- CSV Upload
+- CSV Validation
+- Preview
+- Import
+- Progress Tracking
+- Result Dashboard
+- Error Handling
+
+---
+
+# 📚 Documentation
+
+This repository includes sprint-based documentation covering the complete development process.
+
+- Sprint 1
+- Sprint 2
+- Sprint 3
+- Sprint 4
+- Sprint 5
+
+---
+
+# 👨‍💻 Author
+
+**Aman Mulla**
+
+B.Tech Computer Science & Engineering (AI & ML)
+
+GitHub:
+
+https://github.com/Amanmulla7171
+
+LinkedIn:
+
+<YOUR_LINKEDIN>
+
+Email:
+
+<YOUR_EMAIL>
+
+---
+
+# ⭐ If you found this project helpful, consider giving it a Star!
